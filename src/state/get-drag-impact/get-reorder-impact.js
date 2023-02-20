@@ -18,6 +18,7 @@ import { find } from '../../native-with-fallback';
 import getDidStartAfterCritical from '../did-start-after-critical';
 import calculateReorderImpact from '../calculate-drag-impact/calculate-reorder-impact';
 import getIsDisplaced from '../get-is-displaced';
+import { horizontal, vertical } from '../axis';
 
 type Args = {|
   pageBorderBoxWithDroppableScroll: Rect,
@@ -70,6 +71,9 @@ export default ({
   const targetStart: number = targetRect[axis.start];
   const targetEnd: number = targetRect[axis.end];
 
+  const uprightAxis = axis.direction === 'horizontal' ? vertical : horizontal;
+  const uprightAxisBoundStart: number = targetRect[uprightAxis.start];
+  
   const withoutDragging: DraggableDimension[] = removeDraggableFromList(
     draggable,
     insideDestination,
@@ -81,6 +85,13 @@ export default ({
       const id: DraggableId = child.descriptor.id;
       const childCenter: number = child.page.borderBox.center[axis.line];
 
+      if(axis.grid) {
+        const uprightChildCenter: number = child.page.borderBox.center[uprightAxis.line];
+
+        if (!(uprightAxisBoundStart < uprightChildCenter))
+          return false;
+      }
+      
       const didStartAfterCritical: boolean = getDidStartAfterCritical(
         id,
         afterCritical,
